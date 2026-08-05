@@ -12,6 +12,8 @@ import { formatCurrency } from '../utils/currency';
 
 const STATUS_WORKFLOW = ['Completed', 'Pending Approval', 'Pending', 'Confirmed', 'Packed', 'Shipped', 'Delivered', 'Cancelled'];
 
+import { formatISTDateTime } from '../utils/date';
+
 export const Orders: React.FC = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -167,8 +169,8 @@ export const Orders: React.FC = () => {
                       <p className="text-[11px] font-mono text-amber-600 dark:text-amber-400 font-semibold">{o.phone || o.customer?.phone}</p>
                       <p className="text-[10px] text-slate-400 line-clamp-1">{o.shipping_address}</p>
                     </td>
-                    <td className="py-4 px-4 text-slate-500 dark:text-slate-400">
-                      {new Date(o.created_at).toLocaleDateString()}
+                    <td className="py-4 px-4 text-slate-500 dark:text-slate-400 font-mono text-[11px]">
+                      {formatISTDateTime(o.created_at)}
                     </td>
                     <td className="py-4 px-4 font-bold text-slate-900 dark:text-white">
                       {formatCurrency(o.total_amount)}

@@ -6,6 +6,7 @@ import { TableSkeleton } from '../components/Skeleton';
 import { InvoiceModal } from './InvoiceModal';
 import { Order } from '../types';
 import { formatCurrency } from '../utils/currency';
+import { formatISTDateTime } from '../utils/date';
 
 export const Invoices: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -64,8 +65,8 @@ export const Invoices: React.FC = () => {
                   <td className="py-4 px-4 font-semibold text-slate-900 dark:text-white">
                     {inv.customer_name}
                   </td>
-                  <td className="py-4 px-4 text-slate-500">
-                    {new Date(inv.issued_date).toLocaleDateString()}
+                  <td className="py-4 px-4 text-slate-500 font-mono text-[11px]">
+                    {formatISTDateTime(inv.issued_date)}
                   </td>
                   <td className="py-4 px-4 font-bold text-slate-900 dark:text-white">
                     {formatCurrency(inv.amount)}

@@ -5,6 +5,7 @@ import { api } from '../api/client';
 import { Review } from '../types';
 import { StatusBadge } from '../components/StatusBadge';
 import { TableSkeleton } from '../components/Skeleton';
+import { formatISTDateTime } from '../utils/date';
 import { Modal } from '../components/Modal';
 import { useToast } from '../components/Toast';
 
@@ -109,7 +110,7 @@ export const Reviews: React.FC = () => {
               )}
 
               <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3 text-xs">
-                <span className="text-slate-400">{new Date(r.created_at).toLocaleDateString()}</span>
+                <span className="text-slate-400 font-mono text-[11px]">{formatISTDateTime(r.created_at)}</span>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => updateStatusMutation.mutate({ id: r.id, status: 'approved' })}

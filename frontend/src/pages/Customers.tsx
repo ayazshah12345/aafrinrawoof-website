@@ -6,6 +6,7 @@ import { Customer, Order, ActivityLog } from '../types';
 import { TableSkeleton } from '../components/Skeleton';
 import { Modal } from '../components/Modal';
 import { formatCurrency } from '../utils/currency';
+import { formatISTDate, formatISTDateTime } from '../utils/date';
 import { useToast } from '../components/Toast';
 
 export const Customers: React.FC = () => {
@@ -257,14 +258,14 @@ export const Customers: React.FC = () => {
                       <td className="py-4 px-4 text-slate-600 dark:text-slate-300">
                         <div className="flex items-center gap-1.5">
                           <Calendar className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                          <span>{new Date(c.created_at).toLocaleDateString()}</span>
+                          <span>{formatISTDate(c.created_at)}</span>
                         </div>
                       </td>
                       <td className="py-4 px-4">
                         {c.last_login ? (
                           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium text-[11px]">
                             <LogIn className="w-3 h-3" />
-                            <span>{new Date(c.last_login).toLocaleString()}</span>
+                            <span>{formatISTDateTime(c.last_login)}</span>
                           </div>
                         ) : (
                           <span className="text-[11px] text-slate-400 italic">Never logged in</span>
@@ -360,7 +361,7 @@ export const Customers: React.FC = () => {
                   {authLogsData?.logs?.map((log: ActivityLog) => (
                     <tr key={log.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                       <td className="py-4 px-6 text-slate-500 font-mono">
-                        {new Date(log.created_at).toLocaleString()}
+                        {formatISTDateTime(log.created_at)}
                       </td>
                       <td className="py-4 px-4">
                         {log.action === 'CUSTOMER_REGISTER' ? (
@@ -539,11 +540,11 @@ export const Customers: React.FC = () => {
                 <p className="text-slate-500">{customerDetails.customer.email}</p>
                 <p className="text-slate-500">{customerDetails.customer.phone || 'No phone provided'}</p>
               </div>
-              <div className="text-right text-[11px] text-slate-500">
-                <p>Registered: {new Date(customerDetails.customer.created_at).toLocaleDateString()}</p>
+              <div className="text-right text-[11px] text-slate-500 font-mono">
+                <p>Registered: {formatISTDateTime(customerDetails.customer.created_at)}</p>
                 {customerDetails.customer.last_login && (
                   <p className="text-emerald-600 font-medium mt-0.5">
-                    Last login: {new Date(customerDetails.customer.last_login).toLocaleDateString()}
+                    Last login: {formatISTDateTime(customerDetails.customer.last_login)}
                   </p>
                 )}
               </div>
@@ -572,7 +573,7 @@ export const Customers: React.FC = () => {
                     <div key={o.id} className="p-3.5 flex items-center justify-between">
                       <div>
                         <p className="font-bold text-slate-900 dark:text-white">#{o.order_number}</p>
-                        <p className="text-slate-400">{new Date(o.created_at).toLocaleDateString()}</p>
+                        <p className="text-slate-400 font-mono text-[10px]">{formatISTDateTime(o.created_at)}</p>
                       </div>
                       <div className="text-right">
                         <p className="font-bold text-slate-900 dark:text-white">{formatCurrency(o.total_amount)}</p>

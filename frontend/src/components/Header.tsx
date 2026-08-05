@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { Menu, Sun, Moon, Bell, Search, User, LogOut, Settings as SettingsIcon, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu, Sun, Moon, Bell, Search, User, LogOut, Settings as SettingsIcon, Check, Clock } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api/client';
+import { formatISTDateTime, formatISTTime } from '../utils/date';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -18,6 +19,22 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentTimeIST, setCurrentTimeIST] = useState<string>('');
+
+  useEffect(() => {
+    const updateIST = () => {
+      setCurrentTimeIST(new Date().toLocaleTimeString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      }));
+    };
+    updateIST();
+    const interval = setInterval(updateIST, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const { data: pendingOrders } = useQuery({
     queryKey: ['pending-approval-orders-header'],
@@ -59,6 +76,13 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
 
       {/* Right side controls */}
       <div className="flex items-center gap-3">
+        {/* Live IST Time Badge */}
+        <div title="Indian Standard Time (IST - Asia/Kolkata)" className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold font-mono">
+          <Clock className="w-3.5 h-3.5 animate-pulse text-amber-500" />
+          <span>{currentTimeIST || 'IST'}</span>
+          <span className="text-[10px] font-extrabold px-1 py-0.2 bg-amber-500 text-white rounded">IST</span>
+        </div>
+
         {/* Dark / Light Toggle */}
         <button
           onClick={toggleTheme}

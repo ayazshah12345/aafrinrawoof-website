@@ -53,7 +53,7 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
               INV-{order.order_number}
             </p>
             <p className="text-xs text-slate-500 mt-0.5">
-              Date: {new Date(order.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}
+              Date: {new Date(order.created_at).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })} (IST)
             </p>
           </div>
         </div>

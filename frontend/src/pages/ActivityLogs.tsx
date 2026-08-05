@@ -5,6 +5,8 @@ import { api } from '../api/client';
 import { ActivityLog } from '../types';
 import { TableSkeleton } from '../components/Skeleton';
 
+import { formatISTDateTime } from '../utils/date';
+
 export const ActivityLogs: React.FC = () => {
   const { data: logs, isLoading } = useQuery<ActivityLog[]>({
     queryKey: ['activity-logs'],
@@ -29,7 +31,7 @@ export const ActivityLogs: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/50 dark:bg-slate-800/40 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                <th className="py-4 px-6">Timestamp</th>
+                <th className="py-4 px-6">Timestamp (IST)</th>
                 <th className="py-4 px-4">Action</th>
                 <th className="py-4 px-4">Target Entity</th>
                 <th className="py-4 px-6">Details</th>
@@ -39,7 +41,7 @@ export const ActivityLogs: React.FC = () => {
               {logs?.map((l) => (
                 <tr key={l.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                   <td className="py-4 px-6 text-slate-400 font-mono">
-                    {new Date(l.created_at).toLocaleString()}
+                    {formatISTDateTime(l.created_at)}
                   </td>
                   <td className="py-4 px-4 font-bold text-amber-600 dark:text-amber-400">
                     {l.action}
