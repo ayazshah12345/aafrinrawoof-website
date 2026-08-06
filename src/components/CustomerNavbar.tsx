@@ -27,9 +27,17 @@ export const CustomerNavbar: React.FC = () => {
   return (
     <header className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-colors">
       {/* Top Banner Announcement */}
-      <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white text-[11px] font-semibold py-1.5 px-4 text-center tracking-wide flex items-center justify-center gap-2 shadow-inner">
-        <ShieldCheck className="w-3.5 h-3.5" />
-        <span>100% Authentic Indian Artisanal Craftsmanship | Free Express Shipping Across India</span>
+      <div className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white text-[11px] font-semibold py-1.5 px-4 tracking-wide flex items-center justify-between shadow-inner">
+        <div className="flex-1 flex items-center justify-center gap-2">
+          <ShieldCheck className="w-3.5 h-3.5" />
+          <span>100% Authentic Indian Artisanal Craftsmanship | Free Express Shipping Across India</span>
+        </div>
+        <Link
+          to="/admin/login"
+          className="hidden md:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/20 hover:bg-white/30 text-white text-[10px] font-extrabold uppercase transition-colors"
+        >
+          <span>Admin Portal &rarr;</span>
+        </Link>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
