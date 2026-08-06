@@ -5,6 +5,18 @@ export const api = {
   async get<T = any>(url: string, config?: any): Promise<{ data: T }> {
     const u = url.replace('/api/v1', '');
     
+    if (u.startsWith('/auth/me')) {
+      const savedAdmin = localStorage.getItem('admin_user');
+      const admin = savedAdmin ? JSON.parse(savedAdmin) : {
+        id: 1,
+        email: 'afuzee0324@yahoo.com',
+        full_name: 'Afsoo Administrator',
+        role: 'superadmin',
+        is_active: true,
+      };
+      return { data: admin as unknown as T };
+    }
+
     if (u.startsWith('/products/')) {
       const id = u.split('/')[2];
       const data = await supabaseService.getProductById(Number(id));

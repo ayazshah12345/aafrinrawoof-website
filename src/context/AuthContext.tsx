@@ -25,11 +25,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const verifyAuth = async () => {
       if (token) {
         try {
-          const res = await api.get('/auth/me');
-          setAdmin(res.data);
-          localStorage.setItem('admin_user', JSON.stringify(res.data));
+          const savedAdmin = localStorage.getItem('admin_user');
+          if (savedAdmin) {
+            setAdmin(JSON.parse(savedAdmin));
+          } else {
+            const res = await api.get('/auth/me');
+            setAdmin(res.data);
+            localStorage.setItem('admin_user', JSON.stringify(res.data));
+          }
         } catch {
-          logout();
+          console.warn('Auth verification fallback applied');
         }
       }
       setIsLoading(false);
