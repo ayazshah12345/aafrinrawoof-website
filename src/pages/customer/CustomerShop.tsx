@@ -28,10 +28,14 @@ export const CustomerShop: React.FC = () => {
   }, [searchParams]);
 
   // Fetch categories
-  const { data: categories } = useQuery<Category[]>({
+  const { data: categoriesData } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => (await api.get('/categories')).data,
   });
+
+  const categoryList: Category[] = Array.isArray(categoriesData)
+    ? categoriesData
+    : (categoriesData as any)?.items || [];
 
   // Fetch products
   const { data, isLoading, refetch } = useQuery({
@@ -130,7 +134,7 @@ export const CustomerShop: React.FC = () => {
                   className="w-full py-2.5 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl dark:text-white"
                 >
                   <option value="">All Craft Categories</option>
-                  {(categories || []).map((c) => (
+                  {categoryList.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
                     </option>
