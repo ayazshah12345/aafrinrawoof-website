@@ -399,12 +399,29 @@ export const supabaseService = {
   },
 
   async getCustomerOrders(identifier: string) {
-    const orders = await this.getOrders();
+    let orders: Order[] = [];
+    try {
+      const { data, error } = await supabase.from('orders').select('*');
+      if (!error && data && data.length > 0) {
+        orders = data;
+      }
+    } catch (e) {
+      console.warn('Supabase getCustomerOrders warning:', e);
+    }
+
+    if (!orders || orders.length === 0) {
+      orders = getStorageItem<Order[]>('orders', []);
+    }
+
+    const clean = (identifier || '').trim().toLowerCase();
+    if (!clean) return orders;
+
     return orders.filter(
       (o) =>
-        (o.customer?.email || '').toLowerCase() === identifier.trim().toLowerCase() ||
-        (o.customer?.phone || '').includes(identifier.trim()) ||
-        o.order_number.toLowerCase() === identifier.trim().toLowerCase()
+        (o.customer?.email || '').toLowerCase() === clean ||
+        (o.customer?.phone || '').includes(clean) ||
+        (o.phone || '').includes(clean) ||
+        (o.order_number || '').toLowerCase() === clean
     );
   },
 

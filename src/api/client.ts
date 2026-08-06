@@ -48,9 +48,27 @@ export const api = {
       return { data: { items: data } as unknown as T };
     }
 
+    if (u.startsWith('/orders/by-number/')) {
+      const num = u.split('/')[3];
+      const orders = await supabaseService.getCustomerOrders(num);
+      return { data: (orders[0] || null) as unknown as T };
+    }
+
+    if (u.startsWith('/orders/by-email/')) {
+      const email = u.split('/')[3];
+      const orders = await supabaseService.getCustomerOrders(decodeURIComponent(email));
+      return { data: orders as unknown as T };
+    }
+
+    if (u.startsWith('/orders/by-phone/')) {
+      const phone = u.split('/')[3];
+      const orders = await supabaseService.getCustomerOrders(decodeURIComponent(phone));
+      return { data: orders as unknown as T };
+    }
+
     if (u.startsWith('/orders/customer/')) {
       const identifier = u.split('/')[3];
-      const data = await supabaseService.getCustomerOrders(identifier);
+      const data = await supabaseService.getCustomerOrders(decodeURIComponent(identifier));
       return { data: data as unknown as T };
     }
 

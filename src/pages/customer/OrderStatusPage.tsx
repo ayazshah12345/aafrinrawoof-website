@@ -36,7 +36,7 @@ export const OrderStatusPage: React.FC = () => {
       const q = searchQuery.trim();
 
       // Check if order number query
-      if (q.toUpperCase().startsWith('ORD-')) {
+      if (q.toUpperCase().startsWith('ORD-') || q.toUpperCase().startsWith('AFS-')) {
         try {
           const res = await api.get(`/orders/by-number/${q.toUpperCase()}`);
           return res.data ? [res.data] : [];
@@ -49,7 +49,7 @@ export const OrderStatusPage: React.FC = () => {
       if (q.includes('@')) {
         try {
           const res = await api.get(`/orders/by-email/${encodeURIComponent(q)}`);
-          return res.data || [];
+          return Array.isArray(res.data) ? res.data : (res.data?.items || []);
         } catch {
           return [];
         }
@@ -58,12 +58,12 @@ export const OrderStatusPage: React.FC = () => {
       // Check if phone query
       try {
         const res = await api.get(`/orders/by-phone/${encodeURIComponent(q)}`);
-        return res.data || [];
+        return Array.isArray(res.data) ? res.data : (res.data?.items || []);
       } catch {
         return [];
       }
     },
-    enabled: !!searchQuery,
+    enabled: true,
   });
 
   const handleSearchSubmit = (e: React.FormEvent) => {
