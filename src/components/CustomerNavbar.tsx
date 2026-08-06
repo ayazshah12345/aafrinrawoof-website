@@ -119,18 +119,20 @@ export const CustomerNavbar: React.FC = () => {
               <div className="relative">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors text-xs font-bold text-slate-900 dark:text-white"
+                  className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-full bg-amber-500/10 dark:bg-amber-950/40 border border-amber-500/30 hover:bg-amber-500/20 transition-colors text-xs font-bold text-slate-900 dark:text-white"
                 >
-                  <div className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-[11px]">
-                    {customer.full_name.charAt(0).toUpperCase()}
+                  <div className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-[11px] shadow-sm">
+                    {(customer.full_name || customer.email || 'C').charAt(0).toUpperCase()}
                   </div>
-                  <span className="max-w-[100px] truncate hidden sm:inline">{customer.full_name.split(' ')[0]}</span>
+                  <span className="max-w-[110px] truncate font-bold text-slate-800 dark:text-slate-100">
+                    {customer.full_name ? customer.full_name.split(' ')[0] : (customer.email ? customer.email.split('@')[0] : 'Customer')}
+                  </span>
                 </button>
 
                 {userDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl py-2 z-50 text-xs font-sans">
                     <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
-                      <p className="font-bold text-slate-900 dark:text-white truncate">{customer.full_name}</p>
+                      <p className="font-bold text-slate-900 dark:text-white truncate">{customer.full_name || 'Afsoo Customer'}</p>
                       <p className="text-slate-400 text-[10px] truncate">{customer.email}</p>
                     </div>
                     <Link
