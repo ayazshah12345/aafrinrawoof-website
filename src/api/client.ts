@@ -5,6 +5,20 @@ export const api = {
   async get<T = any>(url: string, config?: any): Promise<{ data: T }> {
     const u = url.replace('/api/v1', '');
     
+    if (u.startsWith('/auth/customer/me')) {
+      const saved = localStorage.getItem('afsoo_customer_user');
+      const cust = saved ? JSON.parse(saved) : {
+        id: Date.now(),
+        full_name: 'Afsoo Customer',
+        email: 'customer@afsoo.com',
+        phone: '9876543210',
+        total_orders: 1,
+        total_spent: 1299,
+        created_at: new Date().toISOString(),
+      };
+      return { data: cust as unknown as T };
+    }
+
     if (u.startsWith('/auth/me')) {
       const savedAdmin = localStorage.getItem('admin_user');
       const admin = savedAdmin ? JSON.parse(savedAdmin) : {

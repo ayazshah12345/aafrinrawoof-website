@@ -37,7 +37,14 @@ interface CustomerAuthContextType {
 const CustomerAuthContext = createContext<CustomerAuthContextType | undefined>(undefined);
 
 export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [customer, setCustomer] = useState<CustomerUser | null>(null);
+  const [customer, setCustomer] = useState<CustomerUser | null>(() => {
+    try {
+      const saved = localStorage.getItem('afsoo_customer_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('afsoo_customer_token'));
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -48,15 +55,18 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
         return;
       }
       try {
-        const res = await api.get('/auth/customer/me', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setCustomer(res.data);
+        const savedUser = localStorage.getItem('afsoo_customer_user');
+        if (savedUser) {
+          setCustomer(JSON.parse(savedUser));
+        } else {
+          const res = await api.get('/auth/customer/me', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setCustomer(res.data);
+          localStorage.setItem('afsoo_customer_user', JSON.stringify(res.data));
+        }
       } catch (err) {
-        console.warn('Customer session expired or invalid:', err);
-        localStorage.removeItem('afsoo_customer_token');
-        setToken(null);
-        setCustomer(null);
+        console.warn('Customer session fallback applied:', err);
       } finally {
         setIsLoading(false);
       }
@@ -70,6 +80,7 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const userProfile = res.data.customer;
 
     localStorage.setItem('afsoo_customer_token', newToken);
+    localStorage.setItem('afsoo_customer_user', JSON.stringify(userProfile));
     setToken(newToken);
     setCustomer(userProfile);
   };
@@ -88,12 +99,14 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const userProfile = res.data.customer;
 
     localStorage.setItem('afsoo_customer_token', newToken);
+    localStorage.setItem('afsoo_customer_user', JSON.stringify(userProfile));
     setToken(newToken);
     setCustomer(userProfile);
   };
 
   const logout = () => {
     localStorage.removeItem('afsoo_customer_token');
+    localStorage.removeItem('afsoo_customer_user');
     setToken(null);
     setCustomer(null);
   };
