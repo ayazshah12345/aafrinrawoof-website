@@ -61,7 +61,7 @@ export const Products: React.FC = () => {
     onSuccess: () => {
       toast('success', 'Product Deleted', 'Product was removed successfully');
       setDeleteProduct(null);
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries();
     },
   });
 

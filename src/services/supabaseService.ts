@@ -211,42 +211,49 @@ export const supabaseService = {
 
   // 3. PRODUCTS
   async getProducts(params?: { category?: string; search?: string; limit?: number }) {
+    let items: Product[] = [];
+
+    // 1. Try fetching from Supabase
     try {
       const { data, error } = await supabase.from('products').select('*');
       if (!error && data && data.length > 0) {
-        let items: Product[] = data;
-        if (params?.category) {
-          items = items.filter((p) => (p.category?.name || '').toLowerCase().includes(params.category!.toLowerCase()));
-        }
-        if (params?.search) {
-          items = items.filter((p) => p.name.toLowerCase().includes(params.search!.toLowerCase()));
-        }
-        if (params?.limit) {
-          items = items.slice(0, params.limit);
-        }
-        return { items, total: items.length };
+        items = data;
       }
     } catch (e) {
       console.warn('Supabase products fetch fallback:', e);
     }
 
-    // Local Storage fallback
-    let items = getStorageItem<Product[]>('products', INITIAL_DEMO_PRODUCTS);
+    // 2. Fallback to storage or initial demo items
+    if (!items || items.length === 0) {
+      items = getStorageItem<Product[]>('products', INITIAL_DEMO_PRODUCTS);
+    }
+
+    // Apply filtering
     if (params?.category) {
-      items = items.filter((p) => (p.slug || '').toLowerCase().includes(params.category!.toLowerCase()));
+      const catLower = params.category.toLowerCase();
+      items = items.filter(
+        (p) => (p.slug || '').toLowerCase().includes(catLower) || (p.category?.name || '').toLowerCase().includes(catLower)
+      );
     }
     if (params?.search) {
-      items = items.filter((p) => p.name.toLowerCase().includes(params.search!.toLowerCase()));
+      const searchLower = params.search.toLowerCase();
+      items = items.filter((p) => p.name.toLowerCase().includes(searchLower));
     }
+
+    const total = items.length;
+    const limit = params?.limit || 8;
+    const totalPages = Math.ceil(total / limit) || 1;
+
     if (params?.limit) {
       items = items.slice(0, params.limit);
     }
-    return { items, total: items.length };
+
+    return { items, total, page: 1, total_pages: totalPages };
   },
 
   async getProductById(id: number) {
     const { items } = await this.getProducts();
-    const found = items.find((p) => p.id === Number(id));
+    const found = items.find((p) => Number(p.id) === Number(id));
     if (!found) throw new Error('Product not found');
     return found;
   },
@@ -286,17 +293,36 @@ export const supabaseService = {
   },
 
   async updateProduct(id: number, productData: Partial<Product>) {
+    const targetId = Number(id);
     const { items } = await this.getProducts();
-    const updated = items.map((p) => (p.id === Number(id) ? { ...p, ...productData, updated_at: new Date().toISOString() } : p));
+    const updated = items.map((p) => (Number(p.id) === targetId ? { ...p, ...productData, updated_at: new Date().toISOString() } : p));
     setStorageItem('products', updated);
-    return updated.find((p) => p.id === Number(id));
+
+    try {
+      await supabase.from('products').update(productData).eq('id', targetId);
+    } catch (e) {
+      console.warn('Supabase update warning:', e);
+    }
+
+    return updated.find((p) => Number(p.id) === targetId);
   },
 
   async deleteProduct(id: number) {
-    const { items } = await this.getProducts();
-    const filtered = items.filter((p) => p.id !== Number(id));
+    const targetId = Number(id);
+
+    // 1. Delete from Supabase Database
+    try {
+      await supabase.from('products').delete().eq('id', targetId);
+    } catch (e) {
+      console.warn('Supabase delete product warning:', e);
+    }
+
+    // 2. Delete from local storage cache
+    const current = getStorageItem<Product[]>('products', INITIAL_DEMO_PRODUCTS);
+    const filtered = current.filter((p) => Number(p.id) !== targetId);
     setStorageItem('products', filtered);
-    return { success: true };
+
+    return { success: true, id: targetId };
   },
 
   // 4. CATEGORIES
