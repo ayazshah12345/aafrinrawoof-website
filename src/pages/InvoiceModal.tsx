@@ -106,19 +106,19 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ order, isOpen, onClo
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs">
-              {order.order_items.map((item, idx) => (
+              {(order.order_items || (order as any).items || []).map((item: any, idx: number) => (
                 <tr key={idx}>
                   <td className="py-3.5 px-4 font-semibold text-slate-900 dark:text-white">
-                    {item.product_name}
+                    {item.product_name || item.name || 'Handmade Craft Item'}
                   </td>
                   <td className="py-3.5 px-4 text-center text-slate-700 dark:text-slate-300">
-                    {item.quantity}
+                    {item.quantity || 1}
                   </td>
                   <td className="py-3.5 px-4 text-right font-mono text-slate-700 dark:text-slate-300">
-                    {formatCurrency(item.price)}
+                    {formatCurrency(item.price || 0)}
                   </td>
                   <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-900 dark:text-white">
-                    {formatCurrency(item.price * item.quantity)}
+                    {formatCurrency((item.price || 0) * (item.quantity || 1))}
                   </td>
                 </tr>
               ))}

@@ -198,7 +198,7 @@ export const OrderStatusPage: React.FC = () => {
                         </span>
                       </div>
                       <p className="text-xs text-slate-400 mt-1">
-                        Placed on {new Date(order.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        Placed on {new Date(order.created_at || Date.now()).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
 
@@ -269,14 +269,14 @@ export const OrderStatusPage: React.FC = () => {
                   <div>
                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Order Items</h4>
                     <div className="divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200/60 dark:border-slate-800 rounded-2xl overflow-hidden">
-                      {order.order_items.map((item, i) => (
+                      {(order.order_items || (order as any).items || []).map((item: any, i: number) => (
                         <div key={i} className="p-3 flex items-center justify-between text-xs">
                           <div>
-                            <p className="font-bold text-slate-900 dark:text-white">{item.product_name}</p>
-                            <p className="text-slate-400">Qty: {item.quantity} &times; {formatCurrency(item.price)}</p>
+                            <p className="font-bold text-slate-900 dark:text-white">{item.product_name || item.name || 'Handmade Craft Item'}</p>
+                            <p className="text-slate-400">Qty: {item.quantity || 1} &times; {formatCurrency(item.price || 0)}</p>
                           </div>
                           <span className="font-mono font-bold text-slate-900 dark:text-white">
-                            {formatCurrency(item.price * item.quantity)}
+                            {formatCurrency((item.price || 0) * (item.quantity || 1))}
                           </span>
                         </div>
                       ))}
