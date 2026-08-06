@@ -106,9 +106,9 @@ export const api = {
       return { data: { items: data } as unknown as T };
     }
 
-    if (u.startsWith('/activity')) {
+    if (u.startsWith('/activity-logs') || u.startsWith('/activity')) {
       const data = await supabaseService.getActivityLogs();
-      return { data: { items: data } as unknown as T };
+      return { data: data as unknown as T };
     }
 
     if (u.startsWith('/sales')) {
@@ -116,28 +116,37 @@ export const api = {
       return { data: data as unknown as T };
     }
 
-    if (u.startsWith('/customers')) {
+    if (u.startsWith('/customers/')) {
+      const id = u.split('/')[2];
+      const customers = await supabaseService.getCustomers();
+      const found = customers.find((c) => Number(c.id) === Number(id));
       const orders = await supabaseService.getOrders();
-      const customersMap = new Map();
-      orders.forEach((o) => {
-        const email = o.customer?.email || 'customer@example.com';
-        if (!customersMap.has(email)) {
-          customersMap.set(email, {
-            id: o.id,
-            full_name: o.customer?.full_name || 'Customer',
-            email: email,
-            phone: o.customer?.phone || o.phone || '',
-            total_orders: 1,
-            total_spent: o.total_amount,
-            created_at: o.created_at,
-          });
-        } else {
-          const existing = customersMap.get(email);
-          existing.total_orders += 1;
-          existing.total_spent += o.total_amount;
+      const customerOrders = orders.filter(
+        (o) => (o.customer?.email || '').toLowerCase() === (found?.email || '').toLowerCase()
+      );
+      return { data: { customer: found, orders: customerOrders } as unknown as T };
+    }
+
+    if (u.startsWith('/customers')) {
+      let customers = await supabaseService.getCustomers();
+      let searchParam = '';
+      if (url.includes('?')) {
+        const queryStr = url.split('?')[1];
+        const searchMatch = queryStr.match(/search=([^&]*)/);
+        if (searchMatch && searchMatch[1]) {
+          searchParam = decodeURIComponent(searchMatch[1]);
         }
-      });
-      return { data: { items: Array.from(customersMap.values()) } as unknown as T };
+      }
+      if (searchParam) {
+        const s = searchParam.toLowerCase();
+        customers = customers.filter(
+          (c) =>
+            (c.full_name || '').toLowerCase().includes(s) ||
+            (c.email || '').toLowerCase().includes(s) ||
+            (c.phone || '').includes(s)
+        );
+      }
+      return { data: { items: customers, total: customers.length } as unknown as T };
     }
 
     if (u.startsWith('/invoices')) {

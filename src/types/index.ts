@@ -55,6 +55,7 @@ export interface Customer {
   total_orders: number;
   total_spent: number;
   last_login?: string;
+  last_login_at?: string;
   created_at: string;
 }
 

@@ -88,55 +88,176 @@ export const supabaseService = {
     return { access_token: token, token_type: 'bearer', admin: adminUser };
   },
 
-  // 2. CUSTOMER AUTHENTICATION
-  async customerLogin(identifier: string, password?: string) {
-    const cleanId = (identifier || 'customer@afsoo.com').toString().trim();
-    const customers = getStorageItem<Customer[]>('customers', []);
-    const found = customers.find(
-      (c) => (c.email || '').toLowerCase() === cleanId.toLowerCase() || (c.phone || '').includes(cleanId)
-    );
-
-    if (found) {
-      const token = `sb_cust_jwt_${Date.now()}`;
-      return { access_token: token, customer: found };
-    }
-
-    // Default demo customer login fallback
-    const demoCust: Customer = {
+  // LOG ACTIVITY HELPER
+  async logActivity(action: string, entity_type: string, entity_id: string, details: string) {
+    const newLog: ActivityLog = {
       id: Date.now(),
-      full_name: cleanId.includes('@') ? cleanId.split('@')[0] : 'Afsoo Customer',
-      email: cleanId.includes('@') ? cleanId : 'customer@afsoo.com',
-      phone: !cleanId.includes('@') ? cleanId : '9876543210',
-      total_orders: 1,
-      total_spent: 1299,
+      action,
+      entity_type,
+      entity_id,
+      details,
       created_at: new Date().toISOString(),
     };
 
-    const updated = [...customers, demoCust];
-    setStorageItem('customers', updated);
-    return { access_token: `sb_cust_jwt_${Date.now()}`, customer: demoCust };
+    const currentLogs = getStorageItem<ActivityLog[]>('activity_logs', []);
+    setStorageItem('activity_logs', [newLog, ...currentLogs]);
+
+    try {
+      await supabase.from('activity_logs').insert([newLog]);
+    } catch (e) {
+      console.warn('Supabase activity log insert warning:', e);
+    }
+
+    return newLog;
+  },
+
+  // 2. CUSTOMER AUTHENTICATION & DIRECTORY
+  async customerLogin(identifier: string, password?: string) {
+    const cleanId = (identifier || 'customer@afsoo.com').toString().trim();
+    const customers = getStorageItem<Customer[]>('customers', []);
+    let found = customers.find(
+      (c) => (c.email || '').toLowerCase() === cleanId.toLowerCase() || (c.phone || '').includes(cleanId)
+    );
+
+    const now = new Date().toISOString();
+
+    if (!found) {
+      found = {
+        id: Date.now(),
+        full_name: cleanId.includes('@') ? cleanId.split('@')[0] : 'Afsoo Customer',
+        email: cleanId.includes('@') ? cleanId : 'customer@afsoo.com',
+        phone: !cleanId.includes('@') ? cleanId : '',
+        total_orders: 0,
+        total_spent: 0,
+        last_login_at: now,
+        created_at: now,
+      };
+      customers.push(found);
+    } else {
+      found.last_login_at = now;
+    }
+
+    setStorageItem('customers', customers);
+
+    try {
+      await supabase.from('customers').upsert([found]);
+    } catch (e) {
+      console.warn('Supabase customer upsert warning:', e);
+    }
+
+    // Record login activity log
+    await this.logActivity(
+      'CUSTOMER_LOGIN',
+      'Customer',
+      found.email,
+      `Customer logged in: ${found.full_name} (${found.email})`
+    );
+
+    const token = `sb_cust_jwt_${Date.now()}`;
+    return { access_token: token, customer: found };
   },
 
   async customerRegister(data: any) {
     const name = (data?.full_name || data?.name || 'Afsoo Customer').toString().trim();
     const email = (data?.email || 'customer@afsoo.com').toString().trim();
-    const phone = (data?.phone || '9876543210').toString().trim();
+    const phone = (data?.phone || '').toString().trim();
+    const now = new Date().toISOString();
 
     const customers = getStorageItem<Customer[]>('customers', []);
+    const existing = customers.find((c) => (c.email || '').toLowerCase() === email.toLowerCase());
+
     const newCust: Customer = {
-      id: Date.now(),
+      id: existing ? existing.id : Date.now(),
       full_name: name,
       email: email,
       phone: phone,
       address: data?.address || 'India',
       city: data?.city || '',
       postal_code: data?.postal_code || '',
-      total_orders: 0,
-      total_spent: 0,
-      created_at: new Date().toISOString(),
+      total_orders: existing ? existing.total_orders : 0,
+      total_spent: existing ? existing.total_spent : 0,
+      last_login_at: now,
+      created_at: existing ? existing.created_at : now,
     };
-    setStorageItem('customers', [...customers, newCust]);
+
+    if (!existing) {
+      customers.push(newCust);
+      setStorageItem('customers', customers);
+    }
+
+    try {
+      await supabase.from('customers').upsert([newCust]);
+    } catch (e) {
+      console.warn('Supabase customer insert warning:', e);
+    }
+
+    // Record registration activity log
+    await this.logActivity(
+      'CUSTOMER_REGISTER',
+      'Customer',
+      email,
+      `Customer registered: ${name} (${email}${phone ? `, Phone: ${phone}` : ''})`
+    );
+
     return { access_token: `sb_cust_jwt_${Date.now()}`, customer: newCust };
+  },
+
+  async getCustomers() {
+    let list: Customer[] = [];
+
+    // 1. Try Supabase DB
+    try {
+      const { data, error } = await supabase.from('customers').select('*').order('created_at', { ascending: false });
+      if (!error && data && data.length > 0) {
+        list = data;
+      }
+    } catch (e) {
+      console.warn('Supabase getCustomers fetch warning:', e);
+    }
+
+    // 2. Local storage customers
+    const localCusts = getStorageItem<Customer[]>('customers', []);
+
+    // 3. Customers from orders
+    const orders = await this.getOrders();
+    const orderCusts: Customer[] = orders
+      .filter((o) => o.customer?.email)
+      .map((o) => ({
+        id: o.id,
+        full_name: o.customer?.full_name || 'Customer',
+        email: o.customer?.email || 'customer@afsoo.com',
+        phone: o.customer?.phone || o.phone || '',
+        address: o.shipping_address || '',
+        city: '',
+        postal_code: '',
+        total_orders: 1,
+        total_spent: o.total_amount,
+        created_at: o.created_at,
+      }));
+
+    const custMap = new Map<string, Customer>();
+
+    [...list, ...localCusts, ...orderCusts].forEach((c) => {
+      if (!c || !c.email) return;
+      const key = c.email.trim().toLowerCase();
+      const existing = custMap.get(key);
+      if (!existing) {
+        custMap.set(key, { ...c });
+      } else {
+        custMap.set(key, {
+          ...existing,
+          full_name: c.full_name || existing.full_name,
+          phone: c.phone || existing.phone,
+          address: c.address || existing.address,
+          total_orders: Math.max(existing.total_orders || 0, c.total_orders || 0),
+          total_spent: Math.max(existing.total_spent || 0, c.total_spent || 0),
+          last_login_at: c.last_login_at || existing.last_login_at,
+          created_at: existing.created_at || c.created_at,
+        });
+      }
+    });
+
+    return Array.from(custMap.values());
   },
 
   // 3. PRODUCTS
@@ -162,6 +283,12 @@ export const supabaseService = {
     const demoSlugs = ['handcrafted-boho-crochet-top', 'artisanal-handloom-dupatta', 'hand-painted-ceramic-tableware-set', 'handmade-beaded-charm-necklace'];
     const demoSkus = ['AF-CR-001', 'AF-HL-002', 'AF-HC-003', 'AF-JW-004'];
     items = items.filter((p) => !demoSlugs.includes(p.slug) && !demoSkus.includes(p.sku || ''));
+
+    // Filter out deleted product IDs
+    const deletedIds = getStorageItem<number[]>('deleted_product_ids', []);
+    if (deletedIds.length > 0) {
+      items = items.filter((p) => !deletedIds.includes(Number(p.id)));
+    }
 
     // Apply filtering
     if (params?.category) {
@@ -245,17 +372,23 @@ export const supabaseService = {
   async deleteProduct(id: number) {
     const targetId = Number(id);
 
-    // 1. Delete from Supabase Database
+    // 1. Save to persistent deleted product IDs list
+    const deletedIds = getStorageItem<number[]>('deleted_product_ids', []);
+    if (!deletedIds.includes(targetId)) {
+      setStorageItem('deleted_product_ids', [...deletedIds, targetId]);
+    }
+
+    // 2. Delete from local storage cache
+    const current = getStorageItem<Product[]>('products', []);
+    const filtered = current.filter((p) => Number(p.id) !== targetId);
+    setStorageItem('products', filtered);
+
+    // 3. Delete from Supabase Database
     try {
       await supabase.from('products').delete().eq('id', targetId);
     } catch (e) {
       console.warn('Supabase delete product warning:', e);
     }
-
-    // 2. Delete from local storage cache
-    const current = getStorageItem<Product[]>('products', INITIAL_DEMO_PRODUCTS);
-    const filtered = current.filter((p) => Number(p.id) !== targetId);
-    setStorageItem('products', filtered);
 
     return { success: true, id: targetId };
   },
@@ -438,9 +571,28 @@ export const supabaseService = {
 
   // 9. ACTIVITY LOGS
   async getActivityLogs() {
-    return getStorageItem<ActivityLog[]>('activity_logs', [
-      { id: 1, action: 'Supabase Serverless Initialized', entity_type: 'System', details: 'Connected directly to Supabase client without Python server requirement.', created_at: new Date().toISOString() },
-    ]);
+    let logs: ActivityLog[] = [];
+    try {
+      const { data, error } = await supabase.from('activity_logs').select('*').order('created_at', { ascending: false });
+      if (!error && data && data.length > 0) {
+        logs = data;
+      }
+    } catch (e) {
+      console.warn('Supabase activity logs fetch warning:', e);
+    }
+
+    const localLogs = getStorageItem<ActivityLog[]>('activity_logs', []);
+
+    const logMap = new Map<number | string, ActivityLog>();
+    [...logs, ...localLogs].forEach((l) => {
+      if (l && l.id) logMap.set(l.id, l);
+    });
+
+    const combined = Array.from(logMap.values()).sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    return combined;
   },
 
   async getSalesAnalytics() {
