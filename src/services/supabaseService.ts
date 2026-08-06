@@ -262,35 +262,53 @@ export const supabaseService = {
 
   // 3. PRODUCTS
   async getProducts(params?: { category?: string; search?: string; limit?: number }) {
-    let items: Product[] = [];
+    let sbItems: Product[] = [];
 
-    // 1. Try fetching from Supabase
+    // 1. Try fetching from Supabase DB
     try {
-      const { data, error } = await supabase.from('products').select('*');
-      if (!error && data && data.length > 0) {
-        items = data;
+      const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+      if (!error && data && Array.isArray(data)) {
+        sbItems = data;
       }
     } catch (e) {
       console.warn('Supabase products fetch fallback:', e);
     }
 
-    // 2. Fallback to storage
-    if (!items || items.length === 0) {
-      items = getStorageItem<Product[]>('products', []);
-    }
+    // 2. Read local storage products
+    const localItems = getStorageItem<Product[]>('products', []);
 
-    // Always filter out any legacy demo products if cached in local storage
+    // 3. Merge & Deduplicate by ID
+    const productMap = new Map<number, Product>();
+
+    [...sbItems, ...localItems].forEach((p) => {
+      if (!p || !p.id) return;
+      const targetId = Number(p.id);
+      if (!productMap.has(targetId)) {
+        productMap.set(targetId, {
+          ...p,
+          id: targetId,
+          price: Number(p.price) || 0,
+          discount_price: p.discount_price ? Number(p.discount_price) : undefined,
+          images: Array.isArray(p.images) && p.images.length > 0 ? p.images : ['/logo.png'],
+          is_active: p.is_active !== undefined ? p.is_active : true,
+        });
+      }
+    });
+
+    let items = Array.from(productMap.values());
+
+    // 4. Always filter out any legacy demo products if cached
     const demoSlugs = ['handcrafted-boho-crochet-top', 'artisanal-handloom-dupatta', 'hand-painted-ceramic-tableware-set', 'handmade-beaded-charm-necklace'];
     const demoSkus = ['AF-CR-001', 'AF-HL-002', 'AF-HC-003', 'AF-JW-004'];
     items = items.filter((p) => !demoSlugs.includes(p.slug) && !demoSkus.includes(p.sku || ''));
 
-    // Filter out deleted product IDs
+    // 5. Filter out deleted product IDs
     const deletedIds = getStorageItem<number[]>('deleted_product_ids', []);
     if (deletedIds.length > 0) {
       items = items.filter((p) => !deletedIds.includes(Number(p.id)));
     }
 
-    // Apply filtering
+    // 6. Apply search and category filtering
     if (params?.category) {
       const catLower = params.category.toLowerCase();
       items = items.filter(
@@ -321,34 +339,56 @@ export const supabaseService = {
   },
 
   async createProduct(productData: Partial<Product>) {
-    const { items } = await this.getProducts();
+    const newId = Date.now();
     const newProduct: Product = {
-      id: Date.now(),
+      id: newId,
       name: productData.name || 'New Craft Product',
       slug: (productData.name || 'new-craft-product').toLowerCase().replace(/\s+/g, '-'),
       description: productData.description || '',
-      price: productData.price || 0,
-      discount_price: productData.discount_price !== undefined ? productData.discount_price : undefined,
-      stock: productData.stock || 10,
-      sku: productData.sku || `AF-${Date.now().toString().slice(-4)}`,
-      images: productData.images || ['/logo.png'],
-      category_id: productData.category_id || 1,
-      is_featured: productData.is_featured || false,
-      is_new_arrival: productData.is_new_arrival || true,
-      is_bestseller: productData.is_bestseller || false,
-      is_active: true,
+      price: Number(productData.price) || 0,
+      discount_price: productData.discount_price !== undefined && Number(productData.discount_price) > 0 ? Number(productData.discount_price) : undefined,
+      stock: productData.stock !== undefined ? Number(productData.stock) : 10,
+      sku: productData.sku || `AF-${newId.toString().slice(-4)}`,
+      images: productData.images && productData.images.length > 0 ? productData.images : ['/logo.png'],
+      category_id: productData.category_id || undefined,
+      is_featured: !!productData.is_featured,
+      is_new_arrival: productData.is_new_arrival !== undefined ? !!productData.is_new_arrival : true,
+      is_bestseller: !!productData.is_bestseller,
+      is_active: productData.is_active !== undefined ? !!productData.is_active : true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
-    const updated = [newProduct, ...items];
-    setStorageItem('products', updated);
+    // Save to local storage first (guarantees instant display everywhere)
+    const currentLocal = getStorageItem<Product[]>('products', []);
+    setStorageItem('products', [newProduct, ...currentLocal]);
 
-    // Sync to Supabase
+    // Insert into Supabase DB
     try {
-      await supabase.from('products').insert([newProduct]);
+      const dbPayload: any = {
+        name: newProduct.name,
+        description: newProduct.description,
+        price: newProduct.price,
+        discount_price: newProduct.discount_price || null,
+        stock: newProduct.stock,
+        images: newProduct.images,
+        is_featured: newProduct.is_featured,
+        is_bestseller: newProduct.is_bestseller,
+        created_at: newProduct.created_at,
+      };
+
+      if (newProduct.category_id) {
+        dbPayload.category_id = newProduct.category_id;
+      }
+
+      const { data, error } = await supabase.from('products').insert([dbPayload]).select();
+      if (error) {
+        console.warn('Supabase DB product insert error:', error.message || error);
+      } else {
+        console.log('Product successfully saved to Supabase DB:', data);
+      }
     } catch (e) {
-      console.warn('Supabase insert warning:', e);
+      console.warn('Supabase insert exception:', e);
     }
 
     return newProduct;

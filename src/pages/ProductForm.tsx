@@ -125,10 +125,8 @@ export const ProductForm: React.FC = () => {
         toast('success', 'Product Published', `${data.name} published immediately`);
       }
 
-      // Invalidate queries so catalog & dashboard update in real-time
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      queryClient.invalidateQueries({ queryKey: ['analytics-summary'] });
-      queryClient.invalidateQueries({ queryKey: ['analytics-recent'] });
+      // Invalidate all query keys so customer dashboard, shop catalog & admin update in real-time
+      queryClient.invalidateQueries();
 
       navigate('/admin/products');
     } catch (err: any) {
