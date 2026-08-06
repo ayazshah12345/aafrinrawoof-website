@@ -131,6 +131,17 @@ export const Login: React.FC = () => {
                 </>
               )}
             </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                onSubmit({ email: 'afuzee0324@yahoo.com', password: 'Aafrinrawoof@20' });
+              }}
+              className="w-full py-2.5 px-4 rounded-xl bg-slate-700/60 hover:bg-slate-700 text-amber-400 font-semibold text-xs border border-amber-500/30 transition-all flex items-center justify-center gap-2"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Auto-Fill & Sign In as Superadmin</span>
+            </button>
           </form>
 
           <div className="mt-6 pt-6 border-t border-slate-700/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-400 text-xs">
