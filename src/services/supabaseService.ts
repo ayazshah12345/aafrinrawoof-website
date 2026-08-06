@@ -363,18 +363,23 @@ export const supabaseService = {
     const currentLocal = getStorageItem<Product[]>('products', []);
     setStorageItem('products', [newProduct, ...currentLocal]);
 
-    // Insert into Supabase DB
+    // Insert into Supabase DB with complete non-null column schema
     try {
       const dbPayload: any = {
         name: newProduct.name,
+        slug: newProduct.slug,
+        sku: newProduct.sku,
         description: newProduct.description,
         price: newProduct.price,
         discount_price: newProduct.discount_price || null,
         stock: newProduct.stock,
         images: newProduct.images,
         is_featured: newProduct.is_featured,
+        is_new_arrival: newProduct.is_new_arrival,
         is_bestseller: newProduct.is_bestseller,
+        is_active: newProduct.is_active,
         created_at: newProduct.created_at,
+        updated_at: newProduct.updated_at,
       };
 
       if (newProduct.category_id) {
