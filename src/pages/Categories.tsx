@@ -55,9 +55,7 @@ export const Categories: React.FC = () => {
     formData.append('file', file);
     setIsUploading(true);
     try {
-      const res = await api.post('/categories/upload-image', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await api.post('/categories/upload-image', formData);
       setImageUrl(res.data.url);
       toast('success', 'Image Uploaded', 'Category image updated');
     } catch {

@@ -91,9 +91,7 @@ export const ProductForm: React.FC = () => {
     // 2. Background upload to server
     setIsUploading(true);
     try {
-      const res = await api.post('/products/upload-images', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await api.post('/products/upload-images', formData);
       // Replace previews with uploaded URLs
       setImages((prev) => {
         const filtered = prev.filter((img) => !img.startsWith('blob:'));

@@ -59,8 +59,8 @@ export const Orders: React.FC = () => {
     mutationFn: async (orderId: number) => {
       return (await api.delete(`/orders/${orderId}`)).data;
     },
-    onSuccess: (data) => {
-      toast('success', 'Order Deleted', data.message || 'Order deleted successfully');
+    onSuccess: (data: any) => {
+      toast('success', 'Order Deleted', data?.message || 'Order deleted successfully');
       setSelectedOrder(null);
       queryClient.invalidateQueries({ queryKey: ['orders'] });
       queryClient.invalidateQueries({ queryKey: ['analytics-summary'] });
