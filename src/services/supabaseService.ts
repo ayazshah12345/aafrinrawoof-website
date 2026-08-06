@@ -167,10 +167,11 @@ export const supabaseService = {
   },
 
   // 2. CUSTOMER AUTHENTICATION
-  async customerLogin(identifier: string, password: string) {
+  async customerLogin(identifier: string, password?: string) {
+    const cleanId = (identifier || 'customer@afsoo.com').toString().trim();
     const customers = getStorageItem<Customer[]>('customers', []);
     const found = customers.find(
-      (c) => (c.email === identifier.trim() || c.phone === identifier.trim())
+      (c) => (c.email || '').toLowerCase() === cleanId.toLowerCase() || (c.phone || '').includes(cleanId)
     );
 
     if (found) {
@@ -181,9 +182,9 @@ export const supabaseService = {
     // Default demo customer login fallback
     const demoCust: Customer = {
       id: Date.now(),
-      full_name: identifier.includes('@') ? identifier.split('@')[0] : 'Afsoo Customer',
-      email: identifier.includes('@') ? identifier.trim() : 'customer@afsoo.com',
-      phone: !identifier.includes('@') ? identifier.trim() : '9876543210',
+      full_name: cleanId.includes('@') ? cleanId.split('@')[0] : 'Afsoo Customer',
+      email: cleanId.includes('@') ? cleanId : 'customer@afsoo.com',
+      phone: !cleanId.includes('@') ? cleanId : '9876543210',
       total_orders: 1,
       total_spent: 1299,
       created_at: new Date().toISOString(),
@@ -194,13 +195,20 @@ export const supabaseService = {
     return { access_token: `sb_cust_jwt_${Date.now()}`, customer: demoCust };
   },
 
-  async customerRegister(data: { full_name: string; email: string; phone: string; password: string }) {
+  async customerRegister(data: any) {
+    const name = (data?.full_name || data?.name || 'Afsoo Customer').toString().trim();
+    const email = (data?.email || 'customer@afsoo.com').toString().trim();
+    const phone = (data?.phone || '9876543210').toString().trim();
+
     const customers = getStorageItem<Customer[]>('customers', []);
     const newCust: Customer = {
       id: Date.now(),
-      full_name: data.full_name,
-      email: data.email,
-      phone: data.phone,
+      full_name: name,
+      email: email,
+      phone: phone,
+      address: data?.address || 'India',
+      city: data?.city || '',
+      postal_code: data?.postal_code || '',
       total_orders: 0,
       total_spent: 0,
       created_at: new Date().toISOString(),
