@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Afsoo Admin API"
     API_V1_STR: str = "/api/v1"
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     
     # JWT Settings
     SECRET_KEY: str = os.getenv("SECRET_KEY", "super-secret-admin-key-afsoo-design-2026-secure-jwt")
@@ -26,13 +27,24 @@ class Settings(BaseSettings):
     EMAILS_FROM_EMAIL: str = os.getenv("EMAILS_FROM_EMAIL", "support@afsoo.com")
     EMAILS_FROM_NAME: str = os.getenv("EMAILS_FROM_NAME", "Afsoo Crafts Studio")
     
-    # CORS
-    ALLOWED_ORIGINS: list = [
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-        "*"
-    ]
+    # Frontend URL for CORS (set this on Railway to your Vercel domain)
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "")
+    
+    # CORS — built dynamically based on environment
+    @property
+    def ALLOWED_ORIGINS(self) -> list:
+        origins = [
+            "http://localhost:5173",
+            "http://localhost:3000",
+            "http://127.0.0.1:5173",
+        ]
+        # Add production frontend URL if set
+        if self.FRONTEND_URL:
+            origins.append(self.FRONTEND_URL)
+            # Also allow www variant
+            if self.FRONTEND_URL.startswith("https://") and not self.FRONTEND_URL.startswith("https://www."):
+                origins.append(self.FRONTEND_URL.replace("https://", "https://www."))
+        return origins
 
     class Config:
         case_sensitive = True

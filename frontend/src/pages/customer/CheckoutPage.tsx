@@ -116,12 +116,12 @@ export const CheckoutPage: React.FC = () => {
               <span>Direct Phone Payment Information</span>
             </div>
             <span className="px-3 py-1 rounded-full bg-white/20 text-white font-mono font-bold text-xs">
-              +91 7395 853 660
+              +91 96292 17907
             </span>
           </div>
 
           <p className="text-xs sm:text-sm font-medium leading-relaxed">
-            Payment can be done by contacting our phone number <strong className="bg-white/20 px-2 py-0.5 rounded text-amber-200 font-black">+91 7395 853 660</strong>. Enter your delivery address below and proceed to confirm your order!
+            Payment can be done by contacting our phone number <strong className="bg-white/20 px-2 py-0.5 rounded text-amber-200 font-black">+91 96292 17907</strong>. Enter your delivery address below and proceed to confirm your order!
           </p>
         </div>
 

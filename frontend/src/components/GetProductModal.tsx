@@ -139,7 +139,7 @@ export const GetProductModal: React.FC<GetProductModalProps> = ({
         city: finalCity,
         state: finalState,
         pincode: finalPincode,
-        payment_method: 'Contact Order (+91 7395 853 660)',
+        payment_method: 'Contact Order (+91 96292 17907)',
         order_status: 'Pending Approval',
         items: itemsPayload,
       };
@@ -194,7 +194,7 @@ export const GetProductModal: React.FC<GetProductModalProps> = ({
         city: city.trim(),
         state: state.trim(),
         pincode: pincode.trim(),
-        payment_method: 'Contact Order (+91 7395 853 660)',
+        payment_method: 'Contact Order (+91 96292 17907)',
         order_status: 'Cancelled',
         items: itemsPayload,
       };
@@ -232,14 +232,14 @@ export const GetProductModal: React.FC<GetProductModalProps> = ({
 
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <a
-              href="tel:+917395853660"
+              href="tel:+919629217907"
               className="inline-flex items-center gap-2 px-4 py-2 bg-white text-emerald-800 rounded-xl text-xs font-black hover:bg-emerald-50 transition-colors shadow-md"
             >
               <Phone className="w-4 h-4 text-emerald-600" />
-              <span>Call +91 7395 853 660</span>
+              <span>Call +91 96292 17907</span>
             </a>
             <a
-              href="https://wa.me/917395853660"
+              href="https://wa.me/919629217907"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-800/80 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-colors"
@@ -275,7 +275,7 @@ export const GetProductModal: React.FC<GetProductModalProps> = ({
               </div>
               <div>
                 <p className="text-[10px] text-slate-400 font-bold uppercase">Payment Phone</p>
-                <p className="text-xs font-black font-mono text-emerald-600 dark:text-emerald-400">+91 7395 853 660</p>
+                <p className="text-xs font-black font-mono text-emerald-600 dark:text-emerald-400">+91 96292 17907</p>
               </div>
             </div>
 
@@ -542,7 +542,7 @@ export const GetProductModal: React.FC<GetProductModalProps> = ({
                   type="tel"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
-                  placeholder="e.g. +91 7395 853 660"
+                  placeholder="e.g. +91 96292 17907"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-mono font-bold outline-none focus:ring-2 focus:ring-amber-500/50"
                 />
               </div>

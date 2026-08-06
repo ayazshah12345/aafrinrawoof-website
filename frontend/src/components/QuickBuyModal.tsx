@@ -82,7 +82,7 @@ export const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ product, isOpen, o
         city: finalCity,
         state: finalState,
         pincode: finalPincode,
-        payment_method: `UPI (${upiId}) / Phone (+91 7395 853 660)`,
+        payment_method: `UPI (${upiId}) / Phone (+91 96292 17907)`,
         order_status: 'Pending Approval',
         items: [
           {
@@ -129,7 +129,7 @@ export const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ product, isOpen, o
         shipping: shippingCharge,
         discount: 0,
         total_amount: grandTotal,
-        payment_method: `UPI (${upiId}) / Phone (+91 7395 853 660)`,
+        payment_method: `UPI (${upiId}) / Phone (+91 96292 17907)`,
         payment_status: 'Paid',
         order_status: 'Confirmed',
         shipping_address: constructedShippingAddr || 'No Shipping Address Provided',
@@ -359,11 +359,11 @@ export const QuickBuyModal: React.FC<QuickBuyModalProps> = ({ product, isOpen, o
                   <Phone className="w-4 h-4 text-amber-300 animate-pulse" /> Direct Phone Payment Info
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white font-mono text-[10px] font-bold">
-                  +91 7395 853 660
+                  +91 96292 17907
                 </span>
               </div>
               <p className="text-xs font-medium leading-relaxed">
-                Payment can be done by contacting phone number <strong>+91 7395 853 660</strong>. After that, click "I Have Paid • Submit Order" below to confirm the order.
+                Payment can be done by contacting phone number <strong>+91 96292 17907</strong>. After that, click "I Have Paid • Submit Order" below to confirm the order.
               </p>
             </div>
 

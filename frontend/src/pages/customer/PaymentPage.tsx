@@ -80,7 +80,7 @@ export const PaymentPage: React.FC = () => {
         city: finalCity,
         state: finalState,
         pincode: finalPincode,
-        payment_method: `UPI (${upiId}) / Phone (+91 7395 853 660)`,
+        payment_method: `UPI (${upiId}) / Phone (+91 96292 17907)`,
         order_status: 'Pending Approval',
         items: itemsPayload,
       };
@@ -128,7 +128,7 @@ export const PaymentPage: React.FC = () => {
           <div>
             <h1 className="text-3xl font-black font-outfit tracking-tight">Payment Gateway & Contact Order</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              Scan the GPay QR Code or contact our phone number (+91 7395 853 660) to complete payment, then confirm your order.
+              Scan the GPay QR Code or contact our phone number (+91 96292 17907) to complete payment, then confirm your order.
             </p>
           </div>
         </div>
@@ -146,24 +146,24 @@ export const PaymentPage: React.FC = () => {
           </div>
 
           <p className="text-xs sm:text-sm font-medium leading-relaxed">
-            Payment can be done by contacting our phone number <strong className="bg-white/20 px-2 py-0.5 rounded text-amber-200 font-black">+91 7395 853 660</strong> via call or WhatsApp. After that, click the order confirmation button below to confirm your order!
+            Payment can be done by contacting our phone number <strong className="bg-white/20 px-2 py-0.5 rounded text-amber-200 font-black">+91 96292 17907</strong> via call or WhatsApp. After that, click the order confirmation button below to confirm your order!
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <a
-              href="tel:+917395853660"
+              href="tel:+919629217907"
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-emerald-800 rounded-xl text-xs font-black hover:bg-emerald-50 transition-colors shadow-md"
             >
               <Phone className="w-4 h-4 text-emerald-600" />
-              <span>Call +91 7395 853 660</span>
+              <span>Call +91 96292 17907</span>
             </a>
             <a
-              href="https://wa.me/917395853660"
+              href="https://wa.me/919629217907"
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-800/80 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-colors"
             >
-              <span>WhatsApp Direct (+91 7395 853 660)</span>
+              <span>WhatsApp Direct (+91 96292 17907)</span>
             </a>
           </div>
         </div>

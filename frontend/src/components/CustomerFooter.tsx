@@ -93,7 +93,7 @@ export const CustomerFooter: React.FC = () => {
             <ul className="space-y-3 text-xs text-slate-400 font-medium">
               <li className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span className="font-mono font-bold text-white">+91 7395 853 660</span>
+                <span className="font-mono font-bold text-white">+91 96292 17907</span>
               </li>
               <li className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-amber-400 shrink-0" />

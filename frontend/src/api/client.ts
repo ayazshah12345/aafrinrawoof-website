@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+// In production (Vercel): VITE_API_URL = "https://your-app.up.railway.app/api/v1"
+// In development: falls back to "/api/v1" (handled by Vite proxy)
 const API_BASE = import.meta.env.VITE_API_URL || '/api/v1';
 
 export const api = axios.create({

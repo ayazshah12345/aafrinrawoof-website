@@ -202,7 +202,7 @@ class OrderCreate(BaseModel):
     state: Optional[str] = None
     pincode: Optional[str] = None
     notes: Optional[str] = None
-    payment_method: Optional[str] = "UPI Direct / Phone (+91 7395 853 660)"
+    payment_method: Optional[str] = "UPI Direct / Phone (+91 96292 17907)"
     order_status: Optional[str] = "Confirmed"
     items: Optional[List[OrderItemCreate]] = []
     coupon_code: Optional[str] = None

@@ -245,7 +245,7 @@ export const OrderStatusPage: React.FC = () => {
                   ) : (
                     <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-xs text-rose-700 dark:text-rose-300 flex items-center gap-3">
                       <AlertCircle className="w-5 h-5 shrink-0" />
-                      <span>This order has been marked as Cancelled by Admin support. If you have questions, contact support at +91 7395 853 660.</span>
+                      <span>This order has been marked as Cancelled by Admin support. If you have questions, contact support at +91 96292 17907.</span>
                     </div>
                   )}
 
