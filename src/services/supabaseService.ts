@@ -348,46 +348,90 @@ export const supabaseService = {
 
   // 5. ORDERS
   async getOrders() {
-    return getStorageItem<Order[]>('orders', []);
+    let orders: Order[] = [];
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        orders = data;
+      }
+    } catch (err) {
+      console.warn('Supabase getOrders warning:', err);
+    }
+
+    if (!orders || orders.length === 0) {
+      orders = getStorageItem<Order[]>('orders', []);
+    }
+
+    return orders;
   },
 
   async createOrder(orderData: any) {
     const orders = await this.getOrders();
+    const orderNumber = orderData.order_number || `AFS-${Math.floor(100000 + Math.random() * 900000)}`;
+
     const newOrder: Order = {
       id: Date.now(),
-      order_number: `AFS-${Math.floor(100000 + Math.random() * 900000)}`,
+      order_number: orderNumber,
       customer_id: Date.now(),
       customer: {
         id: Date.now(),
-        full_name: orderData.customer_name || 'Customer',
-        email: orderData.customer_email || 'customer@example.com',
-        phone: orderData.customer_phone || '9876543210',
+        full_name: orderData.customer_name || 'Valued Customer',
+        email: orderData.customer_email || orderData.email || 'customer@afsoo.com',
+        phone: orderData.customer_phone || orderData.phone || '9876543210',
         total_orders: 1,
-        total_spent: orderData.total_amount || 0,
+        total_spent: orderData.total_amount || orderData.grandTotal || 999,
         created_at: new Date().toISOString(),
       },
-      subtotal: orderData.subtotal || 0,
-      tax: 0,
-      shipping: 0,
+      subtotal: orderData.subtotal || orderData.total_amount || 999,
+      tax: orderData.tax || 0,
+      shipping: orderData.shipping || 0,
       discount: 0,
-      total_amount: orderData.total_amount || 0,
-      payment_method: orderData.payment_method || 'UPI_QR',
+      total_amount: orderData.total_amount || orderData.grandTotal || 999,
+      payment_method: orderData.payment_method || 'UPI QR / Phone (+91 96292 17907)',
       payment_status: orderData.payment_status || 'PENDING',
-      order_status: 'Pending',
-      shipping_address: orderData.shipping_address || 'India',
-      phone: orderData.customer_phone || '9876543210',
+      order_status: orderData.order_status || 'Pending Approval',
+      shipping_address: orderData.shipping_address || orderData.address || 'India',
+      phone: orderData.customer_phone || orderData.phone || '9876543210',
       notes: orderData.notes || '',
       created_at: new Date().toISOString(),
-      order_items: (orderData.items || []).map((item: any, idx: number) => ({
+      order_items: (orderData.order_items || orderData.items || []).map((item: any, idx: number) => ({
         id: Date.now() + idx,
-        product_name: item.name || 'Item',
-        price: item.price || 0,
+        product_name: item.product_name || item.name || item.product?.name || 'Handcrafted Item',
+        price: item.price || item.product?.price || 0,
         quantity: item.quantity || 1,
-        total: (item.price || 0) * (item.quantity || 1),
+        total: (item.price || item.product?.price || 0) * (item.quantity || 1),
       })),
     };
 
-    setStorageItem('orders', [newOrder, ...orders]);
+    // Save to local cache
+    const updatedOrders = [newOrder, ...orders];
+    setStorageItem('orders', updatedOrders);
+
+    // Sync to Supabase DB orders table asynchronously
+    try {
+      await supabase.from('orders').insert([{
+        id: newOrder.id,
+        order_number: newOrder.order_number,
+        customer_name: newOrder.customer?.full_name || 'Valued Customer',
+        customer_email: newOrder.customer?.email || 'customer@afsoo.com',
+        customer_phone: newOrder.phone,
+        total_amount: newOrder.total_amount,
+        payment_method: newOrder.payment_method,
+        payment_status: newOrder.payment_status,
+        order_status: newOrder.order_status,
+        shipping_address: newOrder.shipping_address,
+        created_at: newOrder.created_at,
+        order_items: newOrder.order_items,
+        customer: newOrder.customer,
+      }]);
+    } catch (err) {
+      console.warn('Supabase DB order insert warning:', err);
+    }
+
     return newOrder;
   },
 
@@ -395,6 +439,14 @@ export const supabaseService = {
     const orders = await this.getOrders();
     const updated = orders.map((o) => (o.id === Number(orderId) ? { ...o, order_status: status as any } : o));
     setStorageItem('orders', updated);
+
+    // Sync status update to Supabase DB
+    try {
+      await supabase.from('orders').update({ order_status: status }).eq('id', orderId);
+    } catch (err) {
+      console.warn('Supabase DB order status update warning:', err);
+    }
+
     return updated.find((o) => o.id === Number(orderId));
   },
 

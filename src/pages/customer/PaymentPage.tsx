@@ -69,19 +69,39 @@ export const PaymentPage: React.FC = () => {
       const finalState = state.trim();
       const finalPincode = pincode.trim();
 
+      const savedCust = localStorage.getItem('afsoo_customer_user');
+      const custObj = savedCust ? JSON.parse(savedCust) : null;
+      const finalEmail = checkoutInfo?.customer_email || custObj?.email || 'customer@afsoo.com';
+
+      const fullShippingAddress = `${finalAddress}${finalCity ? `, ${finalCity}` : ''}${finalState ? `, ${finalState}` : ''}${finalPincode ? ` - ${finalPincode}` : ''}`;
+
       const itemsPayload = cart.length > 0
-        ? cart.map((item) => ({ product_id: item.product.id, quantity: item.quantity }))
-        : [{ product_id: 1, quantity: 1 }];
+        ? cart.map((item) => ({
+            id: item.product.id,
+            product_name: item.product.name,
+            price: item.product.discount_price || item.product.price,
+            quantity: item.quantity,
+            total: (item.product.discount_price || item.product.price) * item.quantity,
+          }))
+        : [{ id: 1, product_name: 'Handcrafted Craft Item', price: 999, quantity: 1, total: 999 }];
 
       const payload = {
         customer_name: finalName,
+        customer_email: finalEmail,
         customer_phone: finalPhone,
+        shipping_address: fullShippingAddress || 'India',
         address: finalAddress,
         city: finalCity,
         state: finalState,
         pincode: finalPincode,
+        total_amount: grandTotal,
+        subtotal: effectiveSubtotal,
+        tax: taxAmount,
+        shipping: shippingCharge,
         payment_method: `UPI (${upiId}) / Phone (+91 96292 17907)`,
+        payment_status: 'PENDING',
         order_status: 'Pending Approval',
+        order_items: itemsPayload,
         items: itemsPayload,
       };
 
@@ -96,7 +116,7 @@ export const PaymentPage: React.FC = () => {
         console.warn('API call notice: proceeded with instant order confirmation', err);
       }
 
-      toast('success', 'Payment Received & Order Confirmed!', `Order #${orderNumber} confirmed! Displayed in Admin Dashboard.`);
+      toast('success', 'Payment Received & Order Confirmed!', `Order #${orderNumber} confirmed! Sent to Admin Dashboard.`);
 
       clearCart();
       sessionStorage.removeItem('afsoo_checkout_info');

@@ -26,11 +26,10 @@ export const CustomerLogin: React.FC = () => {
     try {
       await login(identifier.trim(), password);
       toast('success', 'Welcome Back!', 'Logged into your Afsoo Customer Account successfully.');
-      navigate('/my-orders');
+      window.location.href = '/my-orders';
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Login failed. Please check your credentials.';
       toast('error', 'Login Failed', msg);
-    } finally {
       setIsSubmitting(false);
     }
   };
