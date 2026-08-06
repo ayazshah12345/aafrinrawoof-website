@@ -1,88 +1,10 @@
 import { supabase } from '../lib/supabase';
 import { Product, Category, Order, Customer, Coupon, Review, Settings, ActivityLog } from '../types';
 
-// DEFAULT INITIAL DEMO DATA FOR FALLBACK WHEN SUPABASE TABLES ARE EMPTY
-const INITIAL_DEMO_PRODUCTS: Product[] = [
-  {
-    id: 1,
-    name: 'Handcrafted Boho Crochet Top',
-    slug: 'handcrafted-boho-crochet-top',
-    description: '100% organic cotton handcrafted crochet crop top featuring intricate lacework and floral motifs.',
-    price: 1299,
-    discount_price: 899,
-    stock: 12,
-    sku: 'AF-CR-001',
-    images: ['/logo.png'],
-    category_id: 1,
-    is_featured: true,
-    is_new_arrival: true,
-    is_bestseller: true,
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 2,
-    name: 'Artisanal Handloom Dupatta',
-    slug: 'artisanal-handloom-dupatta',
-    description: 'Traditional woven silk cotton dupatta with zari border directly from Indian weavers.',
-    price: 1899,
-    discount_price: 1499,
-    stock: 8,
-    sku: 'AF-HL-002',
-    images: ['/logo.png'],
-    category_id: 2,
-    is_featured: true,
-    is_new_arrival: false,
-    is_bestseller: false,
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 3,
-    name: 'Hand-painted Ceramic Tableware Set',
-    slug: 'hand-painted-ceramic-tableware-set',
-    description: 'Set of 4 artisan painted microwave-safe ceramic bowls with eco-friendly glaze.',
-    price: 999,
-    discount_price: 749,
-    stock: 15,
-    sku: 'AF-HC-003',
-    images: ['/logo.png'],
-    category_id: 3,
-    is_featured: false,
-    is_new_arrival: true,
-    is_bestseller: true,
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 4,
-    name: 'Handmade Beaded Charm Necklace',
-    slug: 'handmade-beaded-charm-necklace',
-    description: 'Custom handmade colorful beaded choker with genuine freshwater pearl centerpiece.',
-    price: 499,
-    discount_price: 399,
-    stock: 20,
-    sku: 'AF-JW-004',
-    images: ['/logo.png'],
-    category_id: 4,
-    is_featured: true,
-    is_new_arrival: false,
-    is_bestseller: true,
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
+// DEFAULT INITIAL DEMO DATA (CLEARED TO PREVENT DUMMY DATA DISPLAY)
+const INITIAL_DEMO_PRODUCTS: Product[] = [];
 
-const INITIAL_DEMO_CATEGORIES: Category[] = [
-  { id: 1, name: 'Crochet Apparel', slug: 'crochet', description: 'Handcrafted crochet clothing & bags', is_active: true, sort_order: 1, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 2, name: 'Handloom Textiles', slug: 'handloom', description: 'Traditional Indian handloom fabrics', is_active: true, sort_order: 2, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 3, name: 'Home Decor', slug: 'decor', description: 'Sustainable hand-painted home crafts', is_active: true, sort_order: 3, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: 4, name: 'Jewelry', slug: 'jewelry', description: 'Handmade beaded & metallic jewelry', is_active: true, sort_order: 4, created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-];
+const INITIAL_DEMO_CATEGORIES: Category[] = [];
 
 const INITIAL_STORE_SETTINGS: Settings = {
   id: 1,
@@ -231,10 +153,15 @@ export const supabaseService = {
       console.warn('Supabase products fetch fallback:', e);
     }
 
-    // 2. Fallback to storage or initial demo items
+    // 2. Fallback to storage
     if (!items || items.length === 0) {
-      items = getStorageItem<Product[]>('products', INITIAL_DEMO_PRODUCTS);
+      items = getStorageItem<Product[]>('products', []);
     }
+
+    // Always filter out any legacy demo products if cached in local storage
+    const demoSlugs = ['handcrafted-boho-crochet-top', 'artisanal-handloom-dupatta', 'hand-painted-ceramic-tableware-set', 'handmade-beaded-charm-necklace'];
+    const demoSkus = ['AF-CR-001', 'AF-HL-002', 'AF-HC-003', 'AF-JW-004'];
+    items = items.filter((p) => !demoSlugs.includes(p.slug) && !demoSkus.includes(p.sku || ''));
 
     // Apply filtering
     if (params?.category) {
