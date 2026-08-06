@@ -44,10 +44,11 @@ export const CustomerRegister: React.FC = () => {
         postal_code: postalCode.trim() || undefined,
       });
       toast('success', 'Account Created!', 'Welcome to Afsoo Crafts Studio.');
-      window.location.href = '/my-orders';
+      navigate('/my-orders');
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Registration failed. Please try again.';
       toast('error', 'Registration Error', msg);
+    } finally {
       setIsSubmitting(false);
     }
   };

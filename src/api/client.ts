@@ -31,6 +31,20 @@ export const api = {
       return { data: admin as unknown as T };
     }
 
+    if (u.startsWith('/auth/customer/me')) {
+      const savedCust = localStorage.getItem('afsoo_customer_user');
+      const cust = savedCust ? JSON.parse(savedCust) : {
+        id: Date.now(),
+        full_name: 'Afsoo Customer',
+        email: 'customer@afsoo.com',
+        phone: '9876543210',
+        total_orders: 1,
+        total_spent: 999,
+        created_at: new Date().toISOString(),
+      };
+      return { data: cust as unknown as T };
+    }
+
     if (u.startsWith('/products/')) {
       const id = u.split('/')[2];
       const data = await supabaseService.getProductById(Number(id));

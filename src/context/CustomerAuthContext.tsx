@@ -57,13 +57,18 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       try {
         const savedUser = localStorage.getItem('afsoo_customer_user');
         if (savedUser) {
-          setCustomer(JSON.parse(savedUser));
+          const parsed = JSON.parse(savedUser);
+          if (parsed && typeof parsed === 'object') {
+            setCustomer(parsed);
+          }
         } else {
           const res = await api.get('/auth/customer/me', {
             headers: { Authorization: `Bearer ${token}` },
           });
-          setCustomer(res.data);
-          localStorage.setItem('afsoo_customer_user', JSON.stringify(res.data));
+          if (res.data) {
+            setCustomer(res.data);
+            localStorage.setItem('afsoo_customer_user', JSON.stringify(res.data));
+          }
         }
       } catch (err) {
         console.warn('Customer session fallback applied:', err);
