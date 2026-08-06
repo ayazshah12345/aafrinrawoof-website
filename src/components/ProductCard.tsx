@@ -132,10 +132,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <button
             onClick={handleGetProduct}
             disabled={product.stock <= 0}
-            className="py-2.5 px-3 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-extrabold text-xs shadow-md shadow-rose-500/20 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40"
+            className="py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs shadow-md shadow-amber-500/20 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Get Product</span>
+            <span>Get the product</span>
           </button>
 
           <button
