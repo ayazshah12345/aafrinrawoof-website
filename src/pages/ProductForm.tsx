@@ -75,31 +75,32 @@ export const ProductForm: React.FC = () => {
     }
   }, [id, isEdit, reset]);
 
-  // Instant Drag & Drop / File select upload with local preview
+  // Instant Drag & Drop / File select upload with exact Base64 Data URL preservation
   const handleFileUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-
-    // 1. Instant local preview
-    const localPreviews: string[] = [];
-    const formData = new FormData();
-    for (let i = 0; i < files.length; i++) {
-      localPreviews.push(URL.createObjectURL(files[i]));
-      formData.append('files', files[i]);
-    }
-    setImages((prev) => [...prev, ...localPreviews]);
-
-    // 2. Background upload to server
     setIsUploading(true);
+
     try {
-      const res = await api.post('/products/upload-images', formData);
-      // Replace previews with uploaded URLs
-      setImages((prev) => {
-        const filtered = prev.filter((img) => !img.startsWith('blob:'));
-        return [...filtered, ...res.data.urls];
-      });
-      toast('success', 'Images Attached', `${res.data.urls.length} images uploaded`);
+      const readAsDataURL = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = (err) => reject(err);
+          reader.readAsDataURL(file);
+        });
+      };
+
+      const newUrls: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const url = await readAsDataURL(files[i]);
+        newUrls.push(url);
+      }
+
+      setImages((prev) => [...prev, ...newUrls]);
+      toast('success', 'Images Attached', `${newUrls.length} image(s) uploaded successfully`);
     } catch (e) {
-      console.log('Local preview maintained:', e);
+      console.error('Image upload failed:', e);
+      toast('error', 'Upload Failed', 'Could not process selected image files');
     } finally {
       setIsUploading(false);
     }

@@ -131,11 +131,36 @@ export const api = {
     }
 
     if (u.startsWith('/products/upload-images')) {
-      return { data: { urls: ['/logo.png'] } as unknown as T };
+      const urls: string[] = [];
+      if (body instanceof FormData) {
+        const files = body.getAll('files') as File[];
+        for (const file of files) {
+          if (file && typeof file === 'object' && file.name) {
+            urls.push(await new Promise<string>((res) => {
+              const r = new FileReader();
+              r.onloadend = () => res(r.result as string);
+              r.readAsDataURL(file);
+            }));
+          }
+        }
+      }
+      const finalUrls = urls.length > 0 ? urls : ['https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=600&auto=format&fit=crop&q=80'];
+      return { data: { urls: finalUrls } as unknown as T };
     }
 
     if (u.startsWith('/products/upload-image') || u.startsWith('/categories/upload-image') || u.startsWith('/settings/upload-logo') || u.startsWith('/settings/upload-qr')) {
-      return { data: { url: '/logo.png' } as unknown as T };
+      let url = 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=600&auto=format&fit=crop&q=80';
+      if (body instanceof FormData) {
+        const file = (body.get('file') || body.get('image') || body.get('logo') || body.get('qr')) as File;
+        if (file && typeof file === 'object' && file.name) {
+          url = await new Promise<string>((res) => {
+            const r = new FileReader();
+            r.onloadend = () => res(r.result as string);
+            r.readAsDataURL(file);
+          });
+        }
+      }
+      return { data: { url } as unknown as T };
     }
 
     if (u.startsWith('/products')) {
