@@ -34,7 +34,7 @@ export const Invoices: React.FC = () => {
 
       {isLoading ? (
         <TableSkeleton rows={6} />
-      ) : invoices?.length === 0 ? (
+      ) : (!invoices || (Array.isArray(invoices) ? invoices.length : invoices?.items?.length) === 0) ? (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-12 text-center">
           <FileText className="w-12 h-12 text-slate-400 mx-auto mb-3" />
           <h3 className="text-base font-bold text-slate-900 dark:text-white">No invoices yet</h3>
@@ -54,7 +54,7 @@ export const Invoices: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
-              {invoices?.map((inv: any) => (
+              {(Array.isArray(invoices) ? invoices : invoices?.items || []).map((inv: any) => (
                 <tr key={inv.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                   <td className="py-4 px-6 font-mono font-bold text-amber-600 dark:text-amber-400">
                     {inv.invoice_number}

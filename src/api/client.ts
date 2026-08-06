@@ -86,6 +86,15 @@ export const api = {
       return { data: data as unknown as T };
     }
 
+    if (u.startsWith('/orders/') && !u.includes('by-') && !u.includes('customer')) {
+      const orderIdStr = u.split('/')[2].split('?')[0];
+      const orders = await supabaseService.getOrders();
+      const found = orders.find(
+        (o) => Number(o.id) === Number(orderIdStr) || (o.order_number || '').toUpperCase() === orderIdStr.toUpperCase()
+      );
+      return { data: (found || orders[0] || null) as unknown as T };
+    }
+
     if (u.startsWith('/orders')) {
       let orders = await supabaseService.getOrders();
       let searchParam = '';
@@ -189,12 +198,14 @@ export const api = {
         invoice_number: `INV-${o.order_number}`,
         order_id: o.id,
         order_number: o.order_number,
-        customer_name: o.customer?.full_name || 'Customer',
-        total_amount: o.total_amount,
+        customer_name: o.customer?.full_name || 'Valued Customer',
+        amount: o.total_amount,
+        payment_method: o.payment_method,
         status: o.payment_status,
+        issued_date: o.created_at,
         created_at: o.created_at,
       }));
-      return { data: { items: invoices } as unknown as T };
+      return { data: invoices as unknown as T };
     }
 
     return { data: [] as unknown as T };
