@@ -87,8 +87,41 @@ export const api = {
     }
 
     if (u.startsWith('/orders')) {
-      const data = await supabaseService.getOrders();
-      return { data: { items: data } as unknown as T };
+      let orders = await supabaseService.getOrders();
+      let searchParam = '';
+      let statusParam = '';
+      let page = 1;
+      let limit = 8;
+
+      if (url.includes('?')) {
+        const queryStr = url.split('?')[1];
+        const params = new URLSearchParams(queryStr);
+        if (params.get('search')) searchParam = params.get('search')!;
+        if (params.get('status')) statusParam = params.get('status')!;
+        if (params.get('page')) page = Number(params.get('page')) || 1;
+        if (params.get('limit')) limit = Number(params.get('limit')) || 8;
+      }
+
+      if (statusParam) {
+        orders = orders.filter((o) => (o.order_status || '').toLowerCase() === statusParam.toLowerCase());
+      }
+
+      if (searchParam) {
+        const s = searchParam.toLowerCase();
+        orders = orders.filter(
+          (o) =>
+            (o.order_number || '').toLowerCase().includes(s) ||
+            (o.customer?.full_name || '').toLowerCase().includes(s) ||
+            (o.phone || '').includes(s) ||
+            (o.shipping_address || '').toLowerCase().includes(s)
+        );
+      }
+
+      const total = orders.length;
+      const totalPages = Math.ceil(total / limit) || 1;
+      const paginated = orders.slice((page - 1) * limit, page * limit);
+
+      return { data: { items: paginated, total, page, total_pages: totalPages } as unknown as T };
     }
 
     if (u.startsWith('/settings')) {
@@ -269,6 +302,12 @@ export const api = {
     if (u.startsWith('/products/')) {
       const id = u.split('/')[2];
       const data = await supabaseService.deleteProduct(Number(id));
+      return { data: data as unknown as T };
+    }
+
+    if (u.startsWith('/orders/')) {
+      const id = u.split('/')[2];
+      const data = await supabaseService.deleteOrder(Number(id));
       return { data: data as unknown as T };
     }
 

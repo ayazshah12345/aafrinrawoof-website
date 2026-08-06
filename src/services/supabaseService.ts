@@ -461,106 +461,204 @@ export const supabaseService = {
 
   // 5. ORDERS
   async getOrders() {
-    let orders: Order[] = [];
+    let sbOrders: any[] = [];
     try {
       const { data, error } = await supabase
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (!error && data && data.length > 0) {
-        orders = data;
+      if (!error && data && Array.isArray(data)) {
+        sbOrders = data;
       }
     } catch (err) {
       console.warn('Supabase getOrders warning:', err);
     }
 
-    if (!orders || orders.length === 0) {
-      orders = getStorageItem<Order[]>('orders', []);
-    }
+    const localOrders = getStorageItem<Order[]>('orders', []);
+    const deletedOrderIds = getStorageItem<number[]>('deleted_order_ids', []);
 
-    return orders;
+    const orderMap = new Map<string, Order>();
+
+    [...sbOrders, ...localOrders].forEach((raw: any) => {
+      if (!raw) return;
+      const targetId = Number(raw.id || Date.now());
+      if (deletedOrderIds.includes(targetId)) return;
+
+      const orderNum = raw.order_number || `AFS-${targetId}`;
+      if (!orderMap.has(orderNum)) {
+        const custName = raw.customer?.full_name || raw.customer_name || 'Valued Customer';
+        const custEmail = raw.customer?.email || raw.customer_email || 'customer@afsoo.com';
+        const custPhone = raw.phone || raw.customer_phone || raw.customer?.phone || '9876543210';
+        const addressStr = raw.shipping_address || raw.address || 'India';
+
+        const parsedOrder: Order = {
+          id: targetId,
+          order_number: orderNum,
+          customer_id: Number(raw.customer_id) || targetId,
+          customer: {
+            id: Number(raw.customer_id) || targetId,
+            full_name: custName,
+            email: custEmail,
+            phone: custPhone,
+            total_orders: 1,
+            total_spent: Number(raw.total_amount) || 0,
+            created_at: raw.created_at || new Date().toISOString(),
+          },
+          subtotal: Number(raw.subtotal) || Number(raw.total_amount) || 0,
+          tax: Number(raw.tax) || 0,
+          shipping: Number(raw.shipping) || 0,
+          discount: Number(raw.discount) || 0,
+          total_amount: Number(raw.total_amount) || 0,
+          payment_method: raw.payment_method || 'UPI QR / Phone (+91 96292 17907)',
+          payment_status: raw.payment_status || 'PENDING',
+          order_status: (raw.order_status as any) || 'Pending Approval',
+          shipping_address: addressStr,
+          phone: custPhone,
+          notes: raw.notes || '',
+          created_at: raw.created_at || new Date().toISOString(),
+          order_items: Array.isArray(raw.order_items) && raw.order_items.length > 0
+            ? raw.order_items
+            : Array.isArray(raw.items) && raw.items.length > 0
+            ? raw.items
+            : [{ id: targetId, product_name: 'Handcrafted Craft Item', price: Number(raw.total_amount) || 0, quantity: 1, total: Number(raw.total_amount) || 0 }],
+        };
+
+        orderMap.set(orderNum, parsedOrder);
+      }
+    });
+
+    const result = Array.from(orderMap.values()).sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    return result;
   },
 
   async createOrder(orderData: any) {
-    const orders = await this.getOrders();
     const orderNumber = orderData.order_number || `AFS-${Math.floor(100000 + Math.random() * 900000)}`;
+    const now = new Date().toISOString();
+    const newId = Date.now();
+
+    const custName = orderData.customer_name || orderData.customer?.full_name || orderData.name || 'Valued Customer';
+    const custEmail = orderData.customer_email || orderData.customer?.email || orderData.email || 'customer@afsoo.com';
+    const custPhone = orderData.customer_phone || orderData.phone || orderData.customer?.phone || '9876543210';
+    const addressDetails = orderData.shipping_address || orderData.address || 'India';
+
+    const formattedAddress = `${custName}, ${addressDetails} (Phone: ${custPhone})`;
 
     const newOrder: Order = {
-      id: Date.now(),
+      id: newId,
       order_number: orderNumber,
-      customer_id: Date.now(),
+      customer_id: newId,
       customer: {
-        id: Date.now(),
-        full_name: orderData.customer_name || 'Valued Customer',
-        email: orderData.customer_email || orderData.email || 'customer@afsoo.com',
-        phone: orderData.customer_phone || orderData.phone || '9876543210',
+        id: newId,
+        full_name: custName,
+        email: custEmail,
+        phone: custPhone,
         total_orders: 1,
-        total_spent: orderData.total_amount || orderData.grandTotal || 999,
-        created_at: new Date().toISOString(),
+        total_spent: Number(orderData.total_amount || orderData.grandTotal) || 0,
+        created_at: now,
       },
-      subtotal: orderData.subtotal || orderData.total_amount || 999,
-      tax: orderData.tax || 0,
-      shipping: orderData.shipping || 0,
-      discount: 0,
-      total_amount: orderData.total_amount || orderData.grandTotal || 999,
+      subtotal: Number(orderData.subtotal || orderData.total_amount || orderData.grandTotal) || 0,
+      tax: Number(orderData.tax) || 0,
+      shipping: Number(orderData.shipping) || 0,
+      discount: Number(orderData.discount) || 0,
+      total_amount: Number(orderData.total_amount || orderData.grandTotal) || 0,
       payment_method: orderData.payment_method || 'UPI QR / Phone (+91 96292 17907)',
       payment_status: orderData.payment_status || 'PENDING',
       order_status: orderData.order_status || 'Pending Approval',
-      shipping_address: orderData.shipping_address || orderData.address || 'India',
-      phone: orderData.customer_phone || orderData.phone || '9876543210',
+      shipping_address: formattedAddress,
+      phone: custPhone,
       notes: orderData.notes || '',
-      created_at: new Date().toISOString(),
+      created_at: now,
       order_items: (orderData.order_items || orderData.items || []).map((item: any, idx: number) => ({
-        id: Date.now() + idx,
+        id: newId + idx,
         product_name: item.product_name || item.name || item.product?.name || 'Handcrafted Item',
-        price: item.price || item.product?.price || 0,
-        quantity: item.quantity || 1,
-        total: (item.price || item.product?.price || 0) * (item.quantity || 1),
+        price: Number(item.price || item.product?.price || 0),
+        quantity: Number(item.quantity || 1),
+        total: Number(item.price || item.product?.price || 0) * Number(item.quantity || 1),
       })),
     };
 
-    // Save to local cache
-    const updatedOrders = [newOrder, ...orders];
-    setStorageItem('orders', updatedOrders);
+    // Save to Local Storage cache
+    const currentOrders = getStorageItem<Order[]>('orders', []);
+    setStorageItem('orders', [newOrder, ...currentOrders]);
 
-    // Sync to Supabase DB orders table asynchronously
+    // Insert valid payload to Supabase DB orders table
     try {
-      await supabase.from('orders').insert([{
-        id: newOrder.id,
+      const dbPayload = {
         order_number: newOrder.order_number,
-        customer_name: newOrder.customer?.full_name || 'Valued Customer',
-        customer_email: newOrder.customer?.email || 'customer@afsoo.com',
-        customer_phone: newOrder.phone,
+        customer_id: 1,
+        subtotal: newOrder.subtotal,
+        tax: newOrder.tax,
+        shipping: newOrder.shipping,
+        discount: newOrder.discount,
         total_amount: newOrder.total_amount,
         payment_method: newOrder.payment_method,
         payment_status: newOrder.payment_status,
         order_status: newOrder.order_status,
         shipping_address: newOrder.shipping_address,
+        phone: newOrder.phone,
+        notes: newOrder.notes,
         created_at: newOrder.created_at,
-        order_items: newOrder.order_items,
-        customer: newOrder.customer,
-      }]);
+        updated_at: now,
+      };
+
+      const { data, error } = await supabase.from('orders').insert([dbPayload]).select();
+      if (error) {
+        console.warn('Supabase DB order insert warning:', error.message || error);
+      } else {
+        console.log('Order successfully saved to Supabase DB:', data);
+      }
     } catch (err) {
-      console.warn('Supabase DB order insert warning:', err);
+      console.warn('Supabase DB order insert error:', err);
     }
+
+    // Record activity log for order creation
+    await this.logActivity(
+      'ORDER_PLACED',
+      'Order',
+      newOrder.order_number,
+      `New order placed: #${newOrder.order_number} by ${custName} (₹${newOrder.total_amount})`
+    );
 
     return newOrder;
   },
 
   async updateOrderStatus(orderId: number, status: string) {
+    const targetId = Number(orderId);
     const orders = await this.getOrders();
-    const updated = orders.map((o) => (o.id === Number(orderId) ? { ...o, order_status: status as any } : o));
+    const updated = orders.map((o) => (Number(o.id) === targetId ? { ...o, order_status: status as any } : o));
     setStorageItem('orders', updated);
 
-    // Sync status update to Supabase DB
     try {
-      await supabase.from('orders').update({ order_status: status }).eq('id', orderId);
+      await supabase.from('orders').update({ order_status: status, updated_at: new Date().toISOString() }).eq('id', targetId);
     } catch (err) {
       console.warn('Supabase DB order status update warning:', err);
     }
 
-    return updated.find((o) => o.id === Number(orderId));
+    return updated.find((o) => Number(o.id) === targetId);
+  },
+
+  async deleteOrder(orderId: number) {
+    const targetId = Number(orderId);
+    const deletedIds = getStorageItem<number[]>('deleted_order_ids', []);
+    if (!deletedIds.includes(targetId)) {
+      setStorageItem('deleted_order_ids', [...deletedIds, targetId]);
+    }
+
+    const current = getStorageItem<Order[]>('orders', []);
+    const filtered = current.filter((o) => Number(o.id) !== targetId);
+    setStorageItem('orders', filtered);
+
+    try {
+      await supabase.from('orders').delete().eq('id', targetId);
+    } catch (err) {
+      console.warn('Supabase delete order warning:', err);
+    }
+
+    return { success: true, message: `Order #${targetId} deleted successfully` };
   },
 
   async getCustomerOrders(identifier: string) {
