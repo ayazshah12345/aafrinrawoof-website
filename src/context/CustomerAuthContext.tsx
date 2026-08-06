@@ -40,23 +40,27 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [customer, setCustomer] = useState<CustomerUser | null>(() => {
     try {
       const saved = localStorage.getItem('afsoo_customer_user');
-      return saved ? JSON.parse(saved) : null;
+      if (!saved || saved === 'undefined') return null;
+      return JSON.parse(saved);
     } catch {
       return null;
     }
   });
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('afsoo_customer_token'));
+  const [token, setToken] = useState<string | null>(() => {
+    const savedToken = localStorage.getItem('afsoo_customer_token');
+    return savedToken && savedToken !== 'undefined' ? savedToken : null;
+  });
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchMe = async () => {
-      if (!token) {
+      if (!token || token === 'undefined') {
         setIsLoading(false);
         return;
       }
       try {
         const savedUser = localStorage.getItem('afsoo_customer_user');
-        if (savedUser) {
+        if (savedUser && savedUser !== 'undefined') {
           const parsed = JSON.parse(savedUser);
           if (parsed && typeof parsed === 'object') {
             setCustomer(parsed);

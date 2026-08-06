@@ -166,12 +166,12 @@ export const api = {
       return { data: data as unknown as T };
     }
 
-    if (u.startsWith('/customer/auth/login')) {
-      const data = await supabaseService.customerLogin(body.identifier, body.password);
+    if (u.startsWith('/customer/auth/login') || u.startsWith('/auth/customer/login')) {
+      const data = await supabaseService.customerLogin(body.identifier || body.email || body.phone, body.password);
       return { data: data as unknown as T };
     }
 
-    if (u.startsWith('/customer/auth/register')) {
+    if (u.startsWith('/customer/auth/register') || u.startsWith('/auth/customer/register')) {
       const data = await supabaseService.customerRegister(body);
       return { data: data as unknown as T };
     }
