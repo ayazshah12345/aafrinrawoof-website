@@ -202,6 +202,35 @@ export const CustomerRegister: React.FC = () => {
               )}
               <span>{isSubmitting ? 'Creating Account...' : 'Register & Start Shopping'}</span>
             </button>
+
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  setIsSubmitting(true);
+                  const demoData = {
+                    full_name: 'Ayaz Shah',
+                    email: `customer_${Date.now().toString().slice(-4)}@afsoo.com`,
+                    password: 'password123',
+                    phone: '9876543210',
+                    address: '123 Craft Studio Road',
+                    city: 'Delhi',
+                    postal_code: '110001',
+                  };
+                  await register(demoData);
+                  toast('success', 'Account Created!', 'Welcome to Afsoo Crafts Studio.');
+                  navigate('/my-orders');
+                } catch {
+                  toast('error', 'Registration Error', 'Unable to create demo customer');
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
+              className="w-full py-2.5 px-4 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold text-xs border border-amber-500/30 transition-all flex items-center justify-center gap-2"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>Auto-Fill & Create Demo Account</span>
+            </button>
           </form>
 
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-center text-xs text-slate-500">

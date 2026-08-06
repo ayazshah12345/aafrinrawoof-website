@@ -108,6 +108,26 @@ export const CustomerLogin: React.FC = () => {
               )}
               <span>{isSubmitting ? 'Signing In...' : 'Sign In to My Account'}</span>
             </button>
+
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  setIsSubmitting(true);
+                  await login('customer@afsoo.com', 'customer123');
+                  toast('success', 'Welcome Back!', 'Logged in as Customer.');
+                  navigate('/my-orders');
+                } catch {
+                  toast('error', 'Login Error', 'Unable to login demo customer');
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
+              className="w-full py-2.5 px-4 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold text-xs border border-amber-500/30 transition-all flex items-center justify-center gap-2"
+            >
+              <UserCheck className="w-4 h-4" />
+              <span>Auto-Fill & Sign In as Customer</span>
+            </button>
           </form>
 
           <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-center text-xs text-slate-500 space-y-2">
