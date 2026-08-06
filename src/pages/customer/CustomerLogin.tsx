@@ -110,11 +110,19 @@ export const CustomerLogin: React.FC = () => {
             </button>
           </form>
 
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-center text-xs text-slate-500">
-            Don't have an account yet?{' '}
-            <Link to="/customer/register" className="font-bold text-amber-600 dark:text-amber-400 hover:underline">
-              Create a New Account
-            </Link>
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-center text-xs text-slate-500 space-y-2">
+            <div>
+              Don't have an account yet?{' '}
+              <Link to="/customer/register" className="font-bold text-amber-600 dark:text-amber-400 hover:underline">
+                Create a New Account
+              </Link>
+            </div>
+            <div className="pt-2">
+              <Link to="/admin/login" className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-amber-500 transition-colors">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Store Owner or Staff? Sign into Admin Portal</span>
+              </Link>
+            </div>
           </div>
         </div>
       </main>

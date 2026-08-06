@@ -133,9 +133,17 @@ export const Login: React.FC = () => {
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-slate-700/60 flex items-center justify-center gap-2 text-slate-400 text-xs">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>256-bit Encrypted Admin Portal</span>
+          <div className="mt-6 pt-6 border-t border-slate-700/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-slate-400 text-xs">
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>256-bit Encrypted Admin Portal</span>
+            </div>
+            <a
+              href="/"
+              className="text-amber-400 hover:text-amber-300 font-semibold transition-colors"
+            >
+              ← Back to Storefront
+            </a>
           </div>
         </div>
       </div>
